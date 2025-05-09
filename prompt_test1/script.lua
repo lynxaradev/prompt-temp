@@ -16,7 +16,6 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
     if err ~= 200 then 
         print("Please update the map, it has old code.")
     else
-        -- it is multiline test
         local lines = text:gmatch("[^\r\n]+")
         for line in lines do
             table.insert(allMaps, line)
@@ -41,12 +40,15 @@ CreateThread(function()
         print("Checking for all maps that exists out of all maps")
     end
 
+    -- Getting all maps that are installed (exist)
     for i = 1, #allMaps do
         local checkName = "promptmap:i_exist_" .. allMaps[i]
         local exists = false
         if Debug == true then
             print("Checking for ".. allMaps[i])
         end
+
+        -- Calling the event to check if it is installed and started
         TriggerEvent(checkName, function(existsCB)
             exists = existsCB
         end)
@@ -61,8 +63,50 @@ CreateThread(function()
         end
     end
 
+    -- Check for legacy maps using static:mapExists event
+    local legacyMaps = {}
+    for i = 1, #allMaps do
+        -- Skip if already in existList
+        local alreadyExists = false
+        for j = 1, #existList do
+            if allMaps[i] == existList[j] then
+                alreadyExists = true
+                break
+            end
+        end
+
+        if not alreadyExists then
+            -- Try legacy event
+            local legacyCheckName = allMaps[i] .. ":mapExists"
+            local legacyExists = false
+            
+            TriggerEvent(legacyCheckName, allMaps[i], function(existsCB)
+                legacyExists = existsCB
+            end)
+            Wait(100)
+
+            if legacyExists == true then
+                table.insert(existList, allMaps[i])
+                table.insert(legacyMaps, allMaps[i])
+            end
+        end
+    end
+
+    -- Print legacy maps found message
+    if #legacyMaps > 0 then
+        print("+--------------------------------------------------------------------------+")
+        print("| ⚠️ ^3 Support for legacy script version found the following maps:^7            |")
+        for i = 1, #legacyMaps do
+            print("| ^3 - " .. legacyMaps[i] .. "^7" .. string.rep(" ", 70 - #legacyMaps[i]) .. "|")
+        end
+        print("| ^3 Legacy maps will work, but consider downloading the new version^7          |")
+        print("+--------------------------------------------------------------------------+")
+    end
+
     -- Checking if this map is last 
     if existList[#existList] == MapId then
+        -- Making a link for Mapdata in case it does not fit
+        -- Example: prompt_test1+prompt_test2+prompt_test3
         local ids = ""
         for i = 1, #existList do
             ids = ids..existList[i]
@@ -71,6 +115,8 @@ CreateThread(function()
             end
         end
         local link = string.format(Urls.DownloadUrl, ids)
+
+        -- Checking if link exists
         PerformHttpRequest(link, function(code, text, headers)
             if code == 200 then
                 link = ("| 🔗 Download: %-56s |"):format(link)
@@ -79,7 +125,9 @@ CreateThread(function()
             end
         end, "GET")
         
+        -- Checking if mapdata exists
         if #mapdataMaps > 0 then 
+            -- Checking if mapdata is the same as maps installed
             local same = true
             for i = 1, #mapdataMaps do
                 if existList[i] == nil or existList[i] ~= mapdataMaps[i] then
@@ -87,6 +135,7 @@ CreateThread(function()
                 end
             end
 
+            -- Printing result
             if same == false then 
                 print("+--------------------------------------------------------------------------+")
                 print("| ❌ ^8 Mapdata is not the same as maps installed    ^7                         |")
