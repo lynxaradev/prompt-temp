@@ -71,6 +71,14 @@ CreateThread(function()
             end
         end
         local link = string.format(Urls.DownloadUrl, ids)
+        PerformHttpRequest(link, function(code, text, headers)
+            if code == 200 then
+                link = ("| 🔗 Download: %-56s |"):format(link)
+            else
+                link = "| 🔗 Download link doesn't exist, please request the upload in support"
+            end
+        end, "GET")
+        
         if #mapdataMaps > 0 then 
             local same = true
             for i = 1, #mapdataMaps do
@@ -79,19 +87,20 @@ CreateThread(function()
                 end
             end
 
-            if same == false then
+            if same == false then 
                 print("+--------------------------------------------------------------------------+")
-                print("| ❌ Mapdata is incorrect or some maps are not started                     |")
-                print(("| 🔗 Download: %-56s |"):format(link))
+                print("| ❌ Mapdata is not the same as maps installed                                                |")
+                print(link)
                 print("+--------------------------------------------------------------------------+")
             else 
-                print("Mapdata is correct.")
+                print("+--------------------------------------------------------------------------+")
+                print("| ✅ Mapdata is the same as maps installed                                                |")
+                print("+--------------------------------------------------------------------------+")
             end
         else 
             print("+--------------------------------------------------------------------------+")
             print("| ❌ Mapdata does not exist                                                |")
-            local link = string.format(Urls.DownloadUrl, MapId)
-            print(("| 🔗 Download: %-56s |"):format(link))
+            print(link)
             print("+--------------------------------------------------------------------------+")
         end
     end
