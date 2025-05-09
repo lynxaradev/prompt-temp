@@ -65,7 +65,10 @@ local function Initialize()
             print("^6[" .. fullName .. "]^1 ERROR: Mapdata does not exist! Please download and install the required mapdata.^0")
             -- Generate a link for mapdata download using the template from token.lua
             local mapsParam = table.concat(allMaps, "+")
-            local downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+            local downloadLink = MapDataDownloadUrlTemplate
+            if MapDataDownloadUrlTemplate:find("{map_ids}") then
+                downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+            end
             print("^6[" .. fullName .. "]^3 Download mapdata from: ^0" .. downloadLink)
             return
         end
@@ -98,7 +101,10 @@ local function Initialize()
             
             -- Generate a link for correct mapdata download using the template from token.lua
             local mapsParam = table.concat(installedMaps, "+")
-            local downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+            local downloadLink = MapDataDownloadUrlTemplate
+if MapDataDownloadUrlTemplate:find("{map_ids}") then
+    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+end
             print("^6[" .. fullName .. "]^3 Download correct mapdata from: ^0" .. downloadLink)
             return
         end
@@ -116,7 +122,10 @@ local function Initialize()
             print("^6[" .. fullName .. "]^1 ERROR: Map order in mapdata does not match expected order!^0")
             -- Generate a link for correct mapdata download using the template from token.lua
             local mapsParam = table.concat(allMaps, "+")
-            local downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+            local downloadLink = MapDataDownloadUrlTemplate
+if MapDataDownloadUrlTemplate:find("{map_ids}") then
+    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+end
             print("^6[" .. fullName .. "]^3 Download correct mapdata from: ^0" .. downloadLink)
             return
         end
@@ -291,7 +300,10 @@ local function VerifyMapData(mapData)
         print("^6[" .. staticName .. "]^1 Please install the correct mapdata that includes these maps.^0")
         -- Generate a link for mapdata download using the template from token.lua
         local mapsParam = table.concat(installedMaps, "+")
-        local downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+        local downloadLink = MapDataDownloadUrlTemplate
+if MapDataDownloadUrlTemplate:find("{map_ids}") then
+    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+end
         print("^6[" .. staticName .. "]^1 Get the correct mapdata from: ^0" .. downloadLink)
     end
     
@@ -301,7 +313,10 @@ local function VerifyMapData(mapData)
         print("^6[" .. staticName .. "]^1 Please install the correct mapdata that matches your installed maps.^0")
         -- Generate a link for mapdata download using the template from token.lua
         local mapsParam = table.concat(installedMaps, "+")
-        local downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+        local downloadLink = MapDataDownloadUrlTemplate
+if MapDataDownloadUrlTemplate:find("{map_ids}") then
+    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
+end
         print("^6[" .. staticName .. "]^1 Get the correct mapdata from: ^0" .. downloadLink)
     end
     
