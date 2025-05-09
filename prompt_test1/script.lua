@@ -63,6 +63,14 @@ CreateThread(function()
 
     -- Checking if this map is last 
     if existList[#existList] == MapId then
+        local ids = ""
+        for i = 1, #existList do
+            ids = ids..existList[i]
+            if i ~= #existList then
+                ids = ids.."+"
+            end
+        end
+        local link = string.format(Urls.DownloadUrl, ids)
         if #mapdataMaps > 0 then 
             local same = true
             for i = 1, #mapdataMaps do
@@ -72,12 +80,19 @@ CreateThread(function()
             end
 
             if same == false then
-                print("Mapdata is not correct.")
+                print("+--------------------------------------------------------------------------+")
+                print("| ❌ Mapdata is incorrect or some maps are not started                     |")
+                print(("| 🔗 Download: %-56s |"):format(link))
+                print("+--------------------------------------------------------------------------+")
             else 
                 print("Mapdata is correct.")
             end
         else 
-            print("Mapdata doesn't exist.")
+            print("+--------------------------------------------------------------------------+")
+            print("| ❌ Mapdata does not exist                                                |")
+            local link = string.format(Urls.DownloadUrl, MapId)
+            print(("| 🔗 Download: %-56s |"):format(link))
+            print("+--------------------------------------------------------------------------+")
         end
     end
 end)
