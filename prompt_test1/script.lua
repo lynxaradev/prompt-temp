@@ -6,6 +6,8 @@ Config.Debug = Debug
 Config.mapIdsUrl =  MapIdsUrl
 Config.fetchTimeout = 10000 -- Timeout in ms for fetching map IDs
 
+local allMaps = {}
+
 -- This function would be executed when the script is loaded by the map component
 local function Initialize()
     print("^6[API-Map]^3 Initializing map component from API server...^0")
