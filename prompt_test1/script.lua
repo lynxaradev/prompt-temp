@@ -80,7 +80,7 @@ CreateThread(function()
             local legacyCheckName = allMaps[i] .. ":mapExists"
             local legacyExists = false
             
-            TriggerEvent(legacyCheckName, allMaps[i], function(existsCB)
+            TriggerEvent(legacyCheckName, function(existsCB)
                 legacyExists = existsCB
             end)
             Wait(100)
