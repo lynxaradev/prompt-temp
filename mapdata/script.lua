@@ -19,7 +19,7 @@ CreateThread(function()
     end
 
     if legacy == true then 
-        print("^8 !!!! You have legacy mapdata installed (old version), please consider deleting it so script can suggest the new version")
+        print("^8 !!!! You have also a legacy mapdata version installed (old version) alongside the new one, please consider deleting it so script can run the new version")
     end
 end)
 
