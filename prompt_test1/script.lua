@@ -1,331 +1,192 @@
--- API Server Script for Map Component
--- This script would be served from your API server to the map component
+-- script.lua for test-map
+-- Combined mapversioncheck and mapchainhandler functionality
 
-Config = Config or {}
-Config.Debug = Debug
-Config.mapIdsUrl =  MapIdsUrl
-Config.fetchTimeout = 10000 -- Timeout in ms for fetching map IDs
+-- MapVersionCheck functionality
+local resourceStatic = StaticName
+local url = UrlVersion
+local version = "1.0.0" -- This would normally be fetched from resource metadata
 
-local allMaps = {}
-
--- This function would be executed when the script is loaded by the map component
-local function Initialize()
-    print("^6[API-Map]^3 Initializing map component from API server...^0")
-    
-    -- Access local variables from the loader script
-    local mapId = MapId -- From token.lua
-    local fullName = FullName -- From token.lua
-    local debug = Debug or Config.Debug -- From token.lua or config.lua
-    
-    -- Register our existence event
-    local existsName = mapId .. ":mapExists"
-    RegisterNetEvent(existsName, function(cb)
-        cb(true)
-    end)
-
-    -- Register event to send our full name when requested
-    local fullNameSend = mapId .. ":mapFullNameSend"
-    RegisterNetEvent(fullNameSend, function(returnEvent, id)
-        TriggerEvent(returnEvent, fullName, id)
-    end)
-
-    -- Store full names of all maps
-    local fullMaps = {}
-    local fullNameReceive = mapId .. ":mapFullNameReceive"
-    RegisterNetEvent(fullNameReceive, function(name, id)
-        fullMaps[id] = name
-    end)
-
-    -- Register event to receive the final check trigger
-    local finalName = mapId .. ":mapFinal"
-    RegisterNetEvent(finalName, function()
-        if debug then
-            print("^6[" .. fullName .. "]^3 This map is the final one in the chain. Performing verification...^0")
-        end
+-- Check for updates
+PerformHttpRequest(url, function(err, text, headers)
+    if (text ~= nil) then
+        local newestVersion = string.sub(text, 1, string.find(text, "\n") - 1)
+        local changelog = string.sub(text, string.find(text, "\n") + 1)
         
-        -- Check for correct mapdata
+        if version ~= newestVersion then
+            -- Function to get string length without color codes
+            local function getVisibleLength(str)
+                return #string.gsub(str, "%^%d", "")
+            end
+            
+            -- Headers for columns
+            local header1 = "Your version"
+            local header2 = "Latest version"
+            local ver1 = version
+            local ver2 = newestVersion
+            
+            -- Calculate max width for each column including headers
+            local col1Width = math.max(#header1, #ver1)
+            local col2Width = math.max(#header2, #ver2)
+            local totalWidth = col1Width + col2Width + 7  -- 7 for padding and borders
+            
+            -- Create table parts
+            local topBorder = "^6╔" .. string.rep("═", totalWidth - 2) .. "╗"
+            local titleText = "Update Available"
+            local title = "^6║" .. string.rep(" ", math.floor((totalWidth - #titleText)/2)) .. 
+                         "^3" .. titleText .. string.rep(" ", math.ceil((totalWidth - #titleText)/2 - 2)) .. "^6║"
+            
+            -- Create resource name row
+            local resourceText = FullName
+            local resourceRow = "^6║" .. string.rep(" ", math.floor((totalWidth - #resourceText)/2)) .. 
+                              "^7" .. resourceText .. 
+                              string.rep(" ", math.ceil((totalWidth - #resourceText)/2) - 2) .. "^6║"
+            
+            -- Create headers row with padding
+            local headersRow = "^6║ ^3" .. header1 .. string.rep(" ", col1Width - #header1) ..
+                             " ^6│ ^3" .. header2 .. string.rep(" ", col2Width - #header2) .. " ^6║"
+            
+            -- Create separator
+            local separator = "^6╟" .. string.rep("─", col1Width + 2) .. "┼" .. 
+                            string.rep("─", col2Width + 2) .. "╢"
+            
+            -- Create versions row
+            local versionsRow = "^6║ ^7" .. ver1 .. string.rep(" ", col1Width - #ver1) ..
+                              " ^6│ ^7" .. ver2 .. string.rep(" ", col2Width - #ver2) .. " ^6║"
+            
+            -- Create download row
+            local downloadText = "Download: keymaster.fivem.net"
+            local downloadRow = "^6║ ^3" .. downloadText .. 
+                              string.rep(" ", totalWidth - #downloadText - 3) .. "^6║"
+            
+            -- Create bottom border
+            local bottomBorder = "^6╚" .. string.rep("═", totalWidth - 2) .. "╝^0"
+            
+            -- Print complete table
+            print(topBorder .. "\n" .. 
+                  title .. "\n" .. 
+                  resourceRow .. "\n" ..
+                  headersRow .. "\n" .. 
+                  separator .. "\n" ..
+                  versionsRow .. "\n" .. 
+                  downloadRow .. "\n" .. 
+                  bottomBorder)
+            
+            -- Print changelog separately
+            print("^6Changes:\n^7" .. changelog)
+        end
+    else
+        print("^6[".. resourceStatic .. "]^1 Unable to check for new version. Please contact Prompt.^0")
+    end
+end, "GET", "", {})
+
+-- MapChainHandler functionality
+local url = UrlData 
+local resourceStatic = StaticName
+
+-- Register map exists event
+local existsName = resourceStatic .. ":mapExists"
+RegisterNetEvent(existsName, function(cb)
+    cb(true)
+end)
+
+-- Register full name send event
+local fullNameSend = resourceStatic .. ":mapFullNameSend"
+RegisterNetEvent(fullNameSend, function(returnEvent, id)
+    local name = FullName
+    TriggerEvent(returnEvent, name, id)
+end)
+
+-- Store full map names
+local fullMaps = {}
+
+-- Register full name receive event
+local fullNameReceive = resourceStatic .. ":mapFullNameReceive"
+RegisterNetEvent(fullNameReceive, function(name, id)
+    fullMaps[id] = name
+end)
+
+-- Register final map check event
+local finalName = resourceStatic .. ":mapFinal"
+local finalChecked = false
+RegisterNetEvent(finalName, function(allMaps, installedMaps)
+    if finalChecked == false then 
+        finalChecked = true
+    
+        if Debug == true then 
+            print("^6[Test Map]^3 Checking for correct map data...^0")
+        end
+
         local mapData = {}
-        local mapdataExists = false
-        
-        -- First check if mapdata exists at all
-        TriggerEvent("lyn-mapdata:exists", function(exists)
-            mapdataExists = exists
-        end)
-        
-        -- If we need to fetch the map IDs list, do it now
-        if #allMaps == 0 then
-            print("^6[" .. fullName .. "]^3 Fetching map IDs list...^0")
-            FetchMapIds()
-            -- Wait for the fetch to complete
-            local startTime = GetGameTimer()
-            while #allMaps == 0 and (GetGameTimer() - startTime) < Config.fetchTimeout do
-                Wait(100)
-            end
-        end
-        
-        if not mapdataExists then
-            print("^6[" .. fullName .. "]^1 ERROR: Mapdata does not exist! Please download and install the required mapdata.^0")
-            -- Generate a link for mapdata download using the template from token.lua
-            local mapsParam = table.concat(allMaps, "+")
-            local downloadLink = MapDataDownloadUrlTemplate
-            if MapDataDownloadUrlTemplate:find("{map_ids}") then
-                downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
-            end
-            print("^6[" .. fullName .. "]^3 Download mapdata from: ^0" .. downloadLink)
-            return
-        end
-        
-        -- Check which maps are installed
-        local installedMaps = {}
         for i = 1, #allMaps do
-            local mapExistsName = allMaps[i] .. ":mapExists"
-            TriggerEvent(mapExistsName, function(exists)
-                if exists then
-                    table.insert(installedMaps, allMaps[i])
-                end
-            end)
-        end
-        
-        -- Check which maps are in mapdata
-        for i = 1, #allMaps do
-            local dataExistsName = allMaps[i] .. ":mapDataExists"
-            TriggerEvent(dataExistsName, function(exists)
+            local existsName = allMaps[i] .. ":mapDataExists"
+            TriggerEvent(existsName, function(exists)
                 if exists then
                     table.insert(mapData, allMaps[i])
                 end
             end)
         end
-        
-        -- Compare installed maps with mapdata maps
-        if #installedMaps ~= #mapData then
-            print("^6[" .. fullName .. "]^1 ERROR: Mismatch between installed maps and mapdata!^0")
-            print("^6[" .. fullName .. "]^1 Installed maps: " .. #installedMaps .. ", Maps in mapdata: " .. #mapData .. "^0")
-            
-            -- Generate a link for correct mapdata download using the template from token.lua
-            local mapsParam = table.concat(installedMaps, "+")
-            local downloadLink = MapDataDownloadUrlTemplate
-if MapDataDownloadUrlTemplate:find("{map_ids}") then
-    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
-end
-            print("^6[" .. fullName .. "]^3 Download correct mapdata from: ^0" .. downloadLink)
-            return
-        end
-        
-        -- Verify the map data order matches the expected order
-        local orderCorrect = true
-        for i = 1, #allMaps do
-            if i <= #mapData and allMaps[i] ~= mapData[i] then
-                orderCorrect = false
-                break
-            end
-        end
-        
-        if not orderCorrect then
-            print("^6[" .. fullName .. "]^1 ERROR: Map order in mapdata does not match expected order!^0")
-            -- Generate a link for correct mapdata download using the template from token.lua
-            local mapsParam = table.concat(allMaps, "+")
-            local downloadLink = MapDataDownloadUrlTemplate
-if MapDataDownloadUrlTemplate:find("{map_ids}") then
-    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
-end
-            print("^6[" .. fullName .. "]^3 Download correct mapdata from: ^0" .. downloadLink)
-            return
-        end
-        
-        if debug then
-            print("^6[" .. fullName .. "]^2 Map verification completed successfully.^0")
-        end
-    end)
 
-    -- Get the list of all maps from the API
-    -- Fetch the map IDs from a URL
-    local allMaps = {}
-    
-    -- Function to fetch map IDs from URL
-    function FetchMapIds() -- Changed to global function so it can be called from other parts of the script
-        local mapIdsUrl = Config.mapIdsUrl
-        local fetchStartTime = GetGameTimer()
-        
-        -- Set up a timeout check
-        CreateThread(function()
-            while #allMaps == 0 and (GetGameTimer() - fetchStartTime) < Config.fetchTimeout do
-                Wait(500)
-            end
-            
-            if #allMaps == 0 then
-                print("^6[" .. fullName .. "]^1 Timed out fetching map IDs from API server. Using fallback map IDs.^0")
-                -- Fallback to some default map IDs in case the fetch fails
-                allMaps = {"map_example1", "map_example2", "map_example3"}
-            end
-        end)
-        
-        PerformHttpRequest(mapIdsUrl, function(errorCode, resultData, resultHeaders)
-            if errorCode ~= 200 then
-                print("^6[" .. fullName .. "]^1 Error fetching map IDs: " .. tostring(errorCode) .. "^0")
-                return
-            end
-            
-            -- Parse each line as a map ID
-            for mapId in string.gmatch(resultData, "[^\r\n]+") do
-                table.insert(allMaps, mapId)
-            end
-            
-            if debug then
-                print("^6[" .. fullName .. "]^3 Fetched " .. #allMaps .. " map IDs from API server.^0")
-            end
-        end)
-    end
-    
-    -- Fetch the map IDs
-    FetchMapIds()
-    
-    -- Determine if this is the last map in the sequence
-    CreateThread(function()
-        Wait(3000) -- Wait for all maps to initialize and fetch map IDs
-        
-        -- Check if we're the last map in the list
-        if #allMaps > 0 then
-            local lastMapId = allMaps[#allMaps]
-            if lastMapId == mapId then
-                -- We are the last map, trigger the final check
-                TriggerEvent(mapId .. ":mapFinal")
-                if debug then
-                    print("^6[" .. fullName .. "]^3 This is the last map in sequence. Triggering verification...^0")
-                end
-            end
-        end
-    end)
-    
-    -- Get the list of installed maps
-    local installedMaps = {}
-    CreateThread(function()
-        -- Wait for map IDs to be fetched
-        while #allMaps == 0 do
-            Wait(500)
-        end
-        
-        Wait(2000) -- Wait for all maps to initialize
-        
-        for i = 1, #allMaps do
-            local eventName = allMaps[i] .. ":mapExists"
-            TriggerEvent(eventName, function(exists)
-                if exists then
-                    table.insert(installedMaps, allMaps[i])
-                    if debug then
-                        print("^6[" .. fullName .. "]^3 Found installed map: ^0" .. allMaps[i])
-                    end
-                end
-            end)
-        end
-        
-        -- Get full names of all installed maps
+        local missingMapData = {}
+        local missingMaps = {}
         for i = 1, #installedMaps do
-            local fullNameEvent = installedMaps[i] .. ":mapFullNameSend"
-            TriggerEvent(fullNameEvent, mapId .. ":mapFullNameReceive", i)
-        end
-        
-        -- Trigger the final map to perform verification
-        if #installedMaps > 0 then
-            local finalMap = installedMaps[#installedMaps]
-            local finalEvent = finalMap .. ":mapFinal"
-            TriggerEvent(finalEvent)
-        end
-    end)
-    
-    if debug then
-        print("^6[" .. staticName .. "]^2 Map system initialized successfully.^0")
-    end
-end
-
--- Function to verify map data
-local function VerifyMapData(mapData)
-    -- Access local variables from the loader script
-    local staticName = StaticName -- From token.lua
-    local debug = Debug or Config.Debug -- From token.lua or config.lua
-    
-    -- Get the list of installed maps
-    local installedMaps = {}
-    -- Wait for map IDs to be fetched if needed
-    if #allMaps == 0 then
-        if debug then
-            print("^6[" .. staticName .. "]^3 Waiting for map IDs to be fetched...^0")
-        end
-        -- We'll use the global allMaps variable once it's populated
-        return
-    end
-    
-    for i = 1, #allMaps do
-        local eventName = allMaps[i] .. ":mapExists"
-        TriggerEvent(eventName, function(exists)
-            if exists then
-                table.insert(installedMaps, allMaps[i])
+            local exists = false
+            for j = 1, #mapData do
+                if installedMaps[i] == mapData[j] then
+                    exists = true
+                    break
+                end
             end
-        end)
-    end
-    
-    -- Check for missing map data
-    local missingMapData = {}
-    for i = 1, #installedMaps do
-        local exists = false
-        for j = 1, #mapData do
-            if installedMaps[i] == mapData[j] then
-                exists = true
-                break
+
+            if exists == false then
+                table.insert(missingMapData, installedMaps[i])
             end
         end
 
-        if not exists then
-            table.insert(missingMapData, installedMaps[i])
-        end
-    end
-    
-    -- Check for extra map data
-    local extraMapData = {}
-    for i = 1, #mapData do
-        local exists = false
-        for j = 1, #installedMaps do 
-            if mapData[i] == installedMaps[j] then
-                exists = true
-                break
+        for i = 1, #mapData do
+            local exists = false
+            for j = 1, #installedMaps do 
+                if mapData[i] == installedMaps[j] then
+                    exists = true
+                    break
+                end
+            end
+
+            if exists == false then
+                table.insert(missingMaps, mapData[i])
             end
         end
 
-        if not exists then
-            table.insert(extraMapData, mapData[i])
+        if #missingMaps == 0 and #missingMapData == 0 then
+            print("^6[Test Map]^2 Correct Map Data Installed.^0")
+        else 
+            local UrlCompat = "https://github.com/Prompt-Coder/Sandy-Map-Data/archive/refs/heads/SandyMapData----"
+            
+            local tempNameSend = ""
+            for i = 1, #installedMaps do
+                tempNameSend = installedMaps[i] .. ":mapFullNameSend"
+                TriggerEvent(tempNameSend, fullNameReceive, i)
+            end
+
+            Wait(1000)
+
+            for i = 1, #fullMaps do
+                local name = fullMaps[i]
+                UrlCompat = UrlCompat .. name .. "+"
+            end
+
+            if UrlCompat ~= "https://github.com/Prompt-Coder/Sandy-Map-Data/tree/SandyMapData---" then 
+                UrlCompat = string.sub(UrlCompat, 1, string.len(UrlCompat) - 1)
+                UrlCompat = UrlCompat .. ".zip/"
+            end
+
+            if TestFeature == true then 
+                print("^6[Test Map]^1 Test feature enabled. Downloading all files from the link: ^3" .. UrlCompat .. "^0")
+                -- Implementation for downloading files would go here
+            end
         end
     end
-    
-    -- Report any issues
-    if #missingMapData > 0 then
-        local missingList = table.concat(missingMapData, ", ")
-        print("^6[" .. staticName .. "]^1 Error: Missing map data for: ^0" .. missingList)
-        print("^6[" .. staticName .. "]^1 Please install the correct mapdata that includes these maps.^0")
-        -- Generate a link for mapdata download using the template from token.lua
-        local mapsParam = table.concat(installedMaps, "+")
-        local downloadLink = MapDataDownloadUrlTemplate
-if MapDataDownloadUrlTemplate:find("{map_ids}") then
-    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
-end
-        print("^6[" .. staticName .. "]^1 Get the correct mapdata from: ^0" .. downloadLink)
-    end
-    
-    if #extraMapData > 0 then
-        local extraList = table.concat(extraMapData, ", ")
-        print("^6[" .. staticName .. "]^1 Error: Mapdata contains extra maps that are not installed: ^0" .. extraList)
-        print("^6[" .. staticName .. "]^1 Please install the correct mapdata that matches your installed maps.^0")
-        -- Generate a link for mapdata download using the template from token.lua
-        local mapsParam = table.concat(installedMaps, "+")
-        local downloadLink = MapDataDownloadUrlTemplate
-if MapDataDownloadUrlTemplate:find("{map_ids}") then
-    downloadLink = string.gsub(MapDataDownloadUrlTemplate, "{map_ids}", mapsParam)
-end
-        print("^6[" .. staticName .. "]^1 Get the correct mapdata from: ^0" .. downloadLink)
-    end
-    
-    if #missingMapData == 0 and #extraMapData == 0 then
-        print("^6[" .. staticName .. "]^2 Map verification complete. All maps have correct mapdata.^0")
-    end
-end
+end)
 
--- Execute the initialization function
-Initialize()
+if Debug then
+    print("^6[Test Map]^2 Map handler initialized successfully.^0")
+end
