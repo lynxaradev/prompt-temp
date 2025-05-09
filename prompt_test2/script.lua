@@ -89,8 +89,8 @@ CreateThread(function()
 
             if same == false then 
                 print("+--------------------------------------------------------------------------+")
-                print("| ❌ ^8Mapdata is not the same as maps installed    ^7                         |")
-                print("| ^8", link, "^7")
+                print("| ❌ ^8 Mapdata is not the same as maps installed    ^7                         |")
+                print("|^8", link, "^7")
                 print("+--------------------------------------------------------------------------+")
             else 
                 print("+--------------------------------------------------------------------------+")
@@ -99,8 +99,8 @@ CreateThread(function()
             end
         else 
             print("+--------------------------------------------------------------------------+")
-            print("| ❌^8 Mapdata does not exist ^7                                               |")
-            print("| ^8", link, "^7")
+            print("| ❌ ^8 Mapdata does not exist ^7                                               |")
+            print("|^8", link, "^7")
             print("+--------------------------------------------------------------------------+")
         end
     end
