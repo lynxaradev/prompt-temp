@@ -3,6 +3,7 @@ CreateThread(function()
     local error = pcall(function()
         TriggerEvent("prompt:mapdata_initialized")
     end)
+        print(error)
     if not error then
         -- Creating event to check if mapdata already exists (prompt:mapdata_initialized)
         RegisterNetEvent("prompt:mapdata_initialized", function()
