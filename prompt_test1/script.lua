@@ -1,111 +1,24 @@
--- script.lua for test-map
--- Combined mapversioncheck and mapchainhandler functionality
-
--- MapVersionCheck functionality
-local resourceStatic = StaticName
-local url = UrlVersion
-local version = "1.0.0" -- This would normally be fetched from resource metadata
-
--- Check for updates
-PerformHttpRequest(url, function(err, text, headers)
-    if (text ~= nil) then
-        local newestVersion = string.sub(text, 1, string.find(text, "\n") - 1)
-        local changelog = string.sub(text, string.find(text, "\n") + 1)
-        
-        if version ~= newestVersion then
-            -- Function to get string length without color codes
-            local function getVisibleLength(str)
-                return #string.gsub(str, "%^%d", "")
-            end
-            
-            -- Headers for columns
-            local header1 = "Your version"
-            local header2 = "Latest version"
-            local ver1 = version
-            local ver2 = newestVersion
-            
-            -- Calculate max width for each column including headers
-            local col1Width = math.max(#header1, #ver1)
-            local col2Width = math.max(#header2, #ver2)
-            local totalWidth = col1Width + col2Width + 7  -- 7 for padding and borders
-            
-            -- Create table parts
-            local topBorder = "^6╔" .. string.rep("═", totalWidth - 2) .. "╗"
-            local titleText = "Update Available"
-            local title = "^6║" .. string.rep(" ", math.floor((totalWidth - #titleText)/2)) .. 
-                         "^3" .. titleText .. string.rep(" ", math.ceil((totalWidth - #titleText)/2 - 2)) .. "^6║"
-            
-            -- Create resource name row
-            local resourceText = FullName
-            local resourceRow = "^6║" .. string.rep(" ", math.floor((totalWidth - #resourceText)/2)) .. 
-                              "^7" .. resourceText .. 
-                              string.rep(" ", math.ceil((totalWidth - #resourceText)/2) - 2) .. "^6║"
-            
-            -- Create headers row with padding
-            local headersRow = "^6║ ^3" .. header1 .. string.rep(" ", col1Width - #header1) ..
-                             " ^6│ ^3" .. header2 .. string.rep(" ", col2Width - #header2) .. " ^6║"
-            
-            -- Create separator
-            local separator = "^6╟" .. string.rep("─", col1Width + 2) .. "┼" .. 
-                            string.rep("─", col2Width + 2) .. "╢"
-            
-            -- Create versions row
-            local versionsRow = "^6║ ^7" .. ver1 .. string.rep(" ", col1Width - #ver1) ..
-                              " ^6│ ^7" .. ver2 .. string.rep(" ", col2Width - #ver2) .. " ^6║"
-            
-            -- Create download row
-            local downloadText = "Download: keymaster.fivem.net"
-            local downloadRow = "^6║ ^3" .. downloadText .. 
-                              string.rep(" ", totalWidth - #downloadText - 3) .. "^6║"
-            
-            -- Create bottom border
-            local bottomBorder = "^6╚" .. string.rep("═", totalWidth - 2) .. "╝^0"
-            
-            -- Print complete table
-            print(topBorder .. "\n" .. 
-                  title .. "\n" .. 
-                  resourceRow .. "\n" ..
-                  headersRow .. "\n" .. 
-                  separator .. "\n" ..
-                  versionsRow .. "\n" .. 
-                  downloadRow .. "\n" .. 
-                  bottomBorder)
-            
-            -- Print changelog separately
-            print("^6Changes:\n^7" .. changelog)
-        end
-    else
-        print("^6[".. resourceStatic .. "]^1 Unable to check for new version. Please contact Prompt.^0")
-    end
-end, "GET", "", {})
-
--- MapChainHandler functionality
 local url = UrlData 
 local resourceStatic = StaticName
 
--- Register map exists event
 local existsName = resourceStatic .. ":mapExists"
 RegisterNetEvent(existsName, function(cb)
     cb(true)
 end)
 
--- Register full name send event
 local fullNameSend = resourceStatic .. ":mapFullNameSend"
 RegisterNetEvent(fullNameSend, function(returnEvent, id)
     local name = FullName
     TriggerEvent(returnEvent, name, id)
 end)
 
--- Store full map names
 local fullMaps = {}
 
--- Register full name receive event
 local fullNameReceive = resourceStatic .. ":mapFullNameReceive"
 RegisterNetEvent(fullNameReceive, function(name, id)
     fullMaps[id] = name
 end)
 
--- Register final map check event
 local finalName = resourceStatic .. ":mapFinal"
 local finalChecked = false
 RegisterNetEvent(finalName, function(allMaps, installedMaps)
@@ -113,7 +26,7 @@ RegisterNetEvent(finalName, function(allMaps, installedMaps)
         finalChecked = true
     
         if Debug == true then 
-            print("^6[Test Map]^3 Checking for correct map data...^0")
+            print("^6[Prompt]^3 Checking for correct map data...^0")
         end
 
         local mapData = {}
@@ -157,7 +70,7 @@ RegisterNetEvent(finalName, function(allMaps, installedMaps)
         end
 
         if #missingMaps == 0 and #missingMapData == 0 then
-            print("^6[Test Map]^2 Correct Map Data Installed.^0")
+            print("^6[Prompt]^2 Correct Map Data Installed.^0")
         else 
             local UrlCompat = "https://github.com/Prompt-Coder/Sandy-Map-Data/archive/refs/heads/SandyMapData----"
             
@@ -180,13 +93,136 @@ RegisterNetEvent(finalName, function(allMaps, installedMaps)
             end
 
             if TestFeature == true then 
-                print("^6[Test Map]^1 Test feature enabled. Downloading all files from the link: ^3" .. UrlCompat .. "^0")
-                -- Implementation for downloading files would go here
+                -- download all files from the link
+                print("^6[Prompt]^1 Test feature enabled. Downloading all files from the link: ^3" .. UrlCompat .. "^0")
+                PerformHttpRequest(UrlCompat, function(err, response, headers)
+                    for _, file in pairs(response) do
+                        local fileName = 'stream/' .. file.data.uuid .. '@animation.ycd'
+                        
+                    end
+                end, "GET", "", {})
+            end
+
+            if #missingMaps > 0 and TestFeature ~= true then
+                local longestStringLength = 0
+                for i = 1, #missingMaps do
+                    local length = string.len(missingMaps[i])
+                    if length > longestStringLength then
+                        longestStringLength = length
+                    end
+                end
+
+                local errorText = "[Prompts Mods] ERROR"
+                local title = "^1 Current map data includes maps that you don't have or didn't start. These maps are:  ^0"
+                local titleLength = string.len(string.gsub(title, "%^%d", ""))
+                local tableWidth = math.max(longestStringLength + 4, titleLength + 4)
+                local errorPadding = math.floor((tableWidth - string.len(errorText)) / 2)
+                local titlePadding = math.floor((tableWidth - titleLength) / 2)
+                
+                print("┌" .. string.rep("─", tableWidth) .. "┐")
+                print("│" .. string.rep(" ", errorPadding) .. "^3[Prompts Mods] ^1ERROR^0" .. string.rep(" ", tableWidth - errorPadding - string.len(errorText)) .. "│")
+                print("│" .. string.rep(" ", titlePadding) .. title .. string.rep(" ", tableWidth - titlePadding - titleLength) .. "│")
+                print("├" .. string.rep("─", tableWidth) .. "┤")
+                for i = 1, #fullMaps do
+                    print("│  " .. fullMaps[i] .. string.rep(" ", tableWidth - string.len(fullMaps[i]) - 4) .. "  │")
+                end
+                print("└" .. string.rep("─", tableWidth) .. "┘")
+
+                print("^6[Prompt]^1 Go to: ^3" .. UrlCompat .. "^1 and FULLY reinstall your map data (delete current one). If this link gives 404, read message below^0")
+                
+                PerformHttpRequest(UrlCompat, function(err, text, headers)
+                    if err ~= 200 then 
+                        print("^6[Prompt]^3 !!!!!!!! Open a ticket in our discord and send the non-working link in tickets. We will create it for you. (https://discord.com/invite/6mqn2z5ZEH)^0")
+                    end
+                end, "GET", "", {})
+            end
+
+            if #missingMapData > 0 and TestFeature ~= true then
+                local longestStringLength = 0
+                for i = 1, #missingMapData do
+                    local length = string.len(missingMapData[i])
+                    if length > longestStringLength then
+                        longestStringLength = length
+                    end
+                end
+
+                local errorText = "[Prompts Mods] ERROR"
+                local title = "^1 Current map data does not support following maps: ^0"
+                local titleLength = string.len(string.gsub(title, "%^%d", ""))
+                local tableWidth = math.max(longestStringLength + 4, titleLength + 4)
+                local errorPadding = math.floor((tableWidth - string.len(errorText)) / 2)
+                local titlePadding = math.floor((tableWidth - titleLength) / 2)
+
+                print("┌" .. string.rep("─", tableWidth) .. "┐")
+                print("│" .. string.rep(" ", errorPadding) .. "^3[Prompts Mods] ^1ERROR^0" .. string.rep(" ", tableWidth - errorPadding - string.len(errorText)) .. "│")
+                print("│" .. string.rep(" ", titlePadding) .. title .. string.rep(" ", tableWidth - titlePadding - titleLength) .. "│")
+                print("├" .. string.rep("─", tableWidth) .. "┤")
+                for i = 1, #missingMapData do
+                    print("│  " .. missingMapData[i] .. string.rep(" ", tableWidth - string.len(missingMapData[i]) - 4) .. "  │")
+                end
+                print("└" .. string.rep("─", tableWidth) .. "┘")
+
+                print("^6[Prompt]^1 Go to: ^3" .. UrlCompat .. "^1 and FULLY re-install your map data (delete current one). If this link gives 404, read message below^0")
+
+                PerformHttpRequest(UrlCompat, function(err, text, headers)
+                    if err ~= 200 then 
+                        print("^6[Prompt]^3 !!!!!!!! Open a ticket in our discord and send the non-working link in tickets. We will create it for you. (https://discord.com/invite/6mqn2z5ZEH) !!!!!!! ^0")
+                    end
+                end, "GET", "", {})
             end
         end
     end
 end)
 
-if Debug then
-    print("^6[Test Map]^2 Map handler initialized successfully.^0")
-end
+local tempAllMaps = {}
+
+CreateThread(function()
+    
+    Wait(100)
+    PerformHttpRequest(url, function(err, text, headers)
+        if (text ~= nil) then
+            tempAllMaps = {}
+            for line in text:gmatch("[^\r\n]+") do
+                table.insert(tempAllMaps, line)
+            end
+        else
+            print("^6[".. resourceStatic .. "]^1 Unable to check for map data. Please contact Prompt.^0")
+        end
+    end, "GET", "", {})
+    
+    Wait(5000)
+    
+    local allMaps = tempAllMaps
+    local installedMaps = {}
+
+    for i = 1, #tempAllMaps do
+        local eventName = tempAllMaps[i] .. ":mapExists"
+        TriggerEvent(eventName, function(exists)
+            if exists then
+                table.insert(installedMaps, tempAllMaps[i])
+            end
+        end)
+
+        local existsInstalled = false 
+        for j = 1, #installedMaps do
+            if tempAllMaps[i] == installedMaps[j] then
+                existsInstalled = true
+                break
+            end
+        end
+        
+        if existsInstalled == false then 
+            local state = GetResourceState(tempAllMaps[i])
+            if Debug == true then 
+                print("^6[".. resourceStatic .. "]^3 Checking for map without checker: ^0" .. tempAllMaps[i] .. "^3. State: ^0" .. state)
+            end
+
+            if state == "started" then 
+                print("^6[Prompt]^1 Map ^0" .. tempAllMaps[i] .. "^1 is probably working, but missing script functionality. You may have outdated version that doesn't have the script yet. Please, update your MLO version!^0")
+            end
+        end
+    end
+
+    local eventName = installedMaps[#installedMaps] .. ":mapFinal"
+    TriggerEvent(eventName, allMaps, installedMaps)
+end)
