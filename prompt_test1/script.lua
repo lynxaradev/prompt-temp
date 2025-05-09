@@ -1,3 +1,7 @@
+local Urls = Config.Urls
+local MapId = Config.Map.Id
+local Debug = Config.Debug
+
 -- Getting maps in mapdata (send event)
 local returnEventName = "promptmap:return_" .. MapId
 CreateThread(function()
