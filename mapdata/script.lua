@@ -56,7 +56,7 @@ CreateThread(function()
             if Debug == true then 
                 print("Adding legacy mapdata support for: ", Maps[i])
             end
-            local mapdataExists = newMaps[i].. ":mapDataExists"
+            local mapdataExists = Maps[i].. ":mapDataExists"
             RegisterNetEvent(mapdataExists, function(cb)
                 cb(true)
             end)
