@@ -52,6 +52,11 @@ CreateThread(function()
             if isLegacy == false then
                 table.insert(newMaps, Maps[i])
             end
+
+            local mapdataExists = newMaps[i].. ":mapDataExists"
+            RegisterNetEvent(mapdataExists, function(cb)
+                cb(true)
+            end)
         end
 
         for i = 1, #newMaps do
@@ -60,7 +65,6 @@ CreateThread(function()
             end
             local existsName = newMaps[i].. ":mapExists"
             local nameSend = newMaps[i].. ":mapFullNameSend"
-            local mapdataExists = newMaps[i].. ":mapDataExists"
             local final = newMaps[i].. ":mapFinal"
 
             RegisterNetEvent(existsName, function(cb)
@@ -69,10 +73,6 @@ CreateThread(function()
 
             RegisterNetEvent(nameSend, function(returnEvent, id)
                 TriggerEvent(returnEvent, newMaps[i], id)
-            end)
-                
-            RegisterNetEvent(mapdataExists, function(cb)
-                cb(true)
             end)
 
             RegisterNetEvent(final, function()
