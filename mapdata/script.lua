@@ -53,6 +53,9 @@ CreateThread(function()
                 table.insert(newMaps, Maps[i])
             end
 
+            if Debug == true then 
+                print("Adding legacy mapdata support for: ", Maps[i])
+            end
             local mapdataExists = newMaps[i].. ":mapDataExists"
             RegisterNetEvent(mapdataExists, function(cb)
                 cb(true)
