@@ -86,6 +86,7 @@ CreateThread(function()
             Wait(100)
 
             if legacyExists == true then
+                print("Found legacy map: ", allMaps[i])
                 table.insert(existList, allMaps[i])
                 table.insert(legacyMaps, allMaps[i])
             end
@@ -101,30 +102,39 @@ CreateThread(function()
         end
         print("| ^3 Legacy maps will work, but consider downloading the new version^7          |")
         print("+--------------------------------------------------------------------------+")
+    else 
+        if Debug == true then 
+            print("Found no legacy maps, continuing...")
+        end
     end
+
+    -- Making a link for Mapdata in case it does not fit
+    -- Example: prompt_test1+prompt_test2+prompt_test3
+    local ids = ""
+    for i = 1, #existList do
+        ids = ids..existList[i]
+        if i ~= #existList then
+            ids = ids.."+"
+        end
+    end
+
+    for i = 1, #legacyMaps do
+        ids = ids.."+"..legacyMaps[i]
+    end
+
+    local link = string.format(Urls.DownloadUrl, ids)
+
+    -- Checking if link exists
+    PerformHttpRequest(link, function(code, text, headers)
+        if code == 200 then
+            link = ("| 🔗 Download: %-56s |"):format(link)
+        else
+            link = "| 🔗 Download link doesn't exist, please request the upload in support"
+        end
+    end, "GET")
 
     -- Checking if this map is last 
     if existList[#existList] == MapId then
-        -- Making a link for Mapdata in case it does not fit
-        -- Example: prompt_test1+prompt_test2+prompt_test3
-        local ids = ""
-        for i = 1, #existList do
-            ids = ids..existList[i]
-            if i ~= #existList then
-                ids = ids.."+"
-            end
-        end
-        local link = string.format(Urls.DownloadUrl, ids)
-
-        -- Checking if link exists
-        PerformHttpRequest(link, function(code, text, headers)
-            if code == 200 then
-                link = ("| 🔗 Download: %-56s |"):format(link)
-            else
-                link = "| 🔗 Download link doesn't exist, please request the upload in support"
-            end
-        end, "GET")
-        
         -- Checking if mapdata exists
         if #mapdataMaps > 0 then 
             -- Checking if mapdata is the same as maps installed
@@ -152,5 +162,10 @@ CreateThread(function()
             print("|^8", link, "^7")
             print("+--------------------------------------------------------------------------+")
         end
+    elseif (#existList + #legacyMaps) ~= #mapdataMaps then
+        print("+--------------------------------------------------------------------------+")
+        print("| ❌ ^8 Mapdata is not the same as maps installed! ^7                          |")
+        print("|^8", link, "^7")
+        print("+--------------------------------------------------------------------------+")
     end
 end)
