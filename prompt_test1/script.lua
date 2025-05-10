@@ -118,10 +118,6 @@ CreateThread(function()
         end
     end
 
-    for i = 1, #legacyMaps do
-        ids = ids.."+"..legacyMaps[i]
-    end
-
     local link = string.format(Urls.DownloadUrl, ids)
 
     -- Checking if link exists
