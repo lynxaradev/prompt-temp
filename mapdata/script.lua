@@ -10,9 +10,6 @@ CreateThread(function()
     end)
 
     Wait(500)
-    if exists == true then 
-        print("^8 !!!! You have multiple instances of mapdata that can cause incompatibility issues !!!!^7")
-    end
 
     if legacy == true then 
         print("^8 !!!! You have also a legacy mapdata version installed (old version) alongside the new one, please consider deleting it so script can run the new version")
