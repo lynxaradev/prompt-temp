@@ -129,39 +129,91 @@ CreateThread(function()
         end
     end, "GET")
 
-    -- Checking if this map is last 
-    if existList[#existList] == MapId then
-        -- Checking if mapdata exists
-        if #mapdataMaps > 0 then 
-            -- Checking if mapdata is the same as maps installed
-            local same = true
-            for i = 1, #mapdataMaps do
-                if existList[i] == nil or existList[i] ~= mapdataMaps[i] then
-                    same = false
-                end
+    -- Function to check if mapdata matches installed maps and print results
+    local function checkMapdataMatch(mapdataMaps, existList, link)
+        local same = true
+        for i = 1, #mapdataMaps do
+            if existList[i] == nil or existList[i] ~= mapdataMaps[i] then
+                same = false
             end
-
-            -- Printing result
-            if same == false then 
+        end
+        
+        -- Printing result
+        if same == false then 
+            if #existList > #mapdataMaps then
                 print("+--------------------------------------------------------------------------+")
-                print("| ❌ ^8 Mapdata is not the same as maps installed    ^7                         |")
+                print("| ❌ ^8 Mapdata is not the same as maps installed^7                          |")
+                print("|^8 There are more maps than mapdata supports!^7                             |")
                 print("|^8", link, "^7")
                 print("+--------------------------------------------------------------------------+")
-            else 
+            elseif #existList < #mapdataMaps then
                 print("+--------------------------------------------------------------------------+")
-                print("| ✅ ^2Mapdata is the same as maps installed    ^7                             |")
+                print("| ❌ ^8 Mapdata is not the same as maps installed^7                          |")
+                print("|^8 There are less maps than mapdata supports!^7                             |")
+                print("|^8", link, "^7")
                 print("+--------------------------------------------------------------------------+")
             end
         else 
             print("+--------------------------------------------------------------------------+")
-            print("| ❌ ^8 Mapdata does not exist ^7                                               |")
-            print("|^8", link, "^7")
+            print("| ✅ ^2Mapdata is the same as maps installed    ^7                             |")
             print("+--------------------------------------------------------------------------+")
         end
-    elseif (#existList + #legacyMaps) ~= #mapdataMaps then
-        print("+--------------------------------------------------------------------------+")
-        print("| ❌ ^8 Mapdata is not the same as maps installed! ^7                          |")
-        print("|^8", link, "^7")
-        print("+--------------------------------------------------------------------------+")
+    end
+
+    -- Checking if this map is last 
+    if existList[#existList] == MapId then
+        -- Checking if mapdata exists
+        if #mapdataMaps > 0 then 
+            -- Check if mapdata matches installed maps
+            checkMapdataMatch(mapdataMaps, existList, link)
+        else 
+            -- Check for legacy mapdata events
+            local legacyMapdataMaps = {}
+            local foundLegacyMapdata = false
+            
+            -- Loop through all maps in existList to check for legacy mapdata events
+            for i = 1, #existList do
+                local legacyMapdataCheckName = existList[i] .. ":mapDataExists"
+                local legacyMapdataExists = false
+                
+                if Debug == true then
+                    print("Checking for legacy mapdata: " .. existList[i])
+                end
+                
+                TriggerEvent(legacyMapdataCheckName, function(existsCB)
+                    legacyMapdataExists = existsCB
+                end)
+                Wait(100)
+                
+                if legacyMapdataExists == true then
+                    if Debug == true then
+                        print("Found legacy mapdata for: " .. existList[i])
+                    end
+                    table.insert(legacyMapdataMaps, existList[i])
+                    foundLegacyMapdata = true
+                end
+            end
+            
+            if foundLegacyMapdata then
+                -- Update mapdataMaps with legacy data
+                mapdataMaps = legacyMapdataMaps
+                
+                print("+--------------------------------------------------------------------------+")
+                print("| ⚠️ ^3 Support for legacy mapdata found for the following maps:^7             |")
+                for i = 1, #legacyMapdataMaps do
+                    print("| ^3 - " .. legacyMapdataMaps[i] .. "^7" .. string.rep(" ", 70 - #legacyMapdataMaps[i]) .. "|")
+                end
+                print("| ^3 Legacy mapdata will work, but consider downloading the new version^7      |")
+                print("+--------------------------------------------------------------------------+")
+                
+                -- Check if mapdata matches installed maps
+                checkMapdataMatch(mapdataMaps, existList, link)
+            else
+                print("+--------------------------------------------------------------------------+")
+                print("| ❌ ^8 Mapdata does not exist ^7                                               |")
+                print("|^8", link, "^7")
+                print("+--------------------------------------------------------------------------+")
+            end
+        end
     end
 end)
