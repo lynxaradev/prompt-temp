@@ -4,7 +4,7 @@ name = "Sheriff",
 static = "prompt_test1"
 },
 {
-name = "Church",
-static = "Church"
+name = "trainstation",
+static = "prompt_trainstation"
 }
 }
