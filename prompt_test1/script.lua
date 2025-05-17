@@ -342,5 +342,10 @@ CreateThread(function()
                 end
             end
         end
+    else 
+        -- Legacy Final Map support 
+        local finalMapName = existList[#existList].. ":mapFinal"
+        Wait(5000)
+        TriggerEvent(finalMapName, allMaps, existList)
     end
 end)
