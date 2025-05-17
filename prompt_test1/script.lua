@@ -17,8 +17,7 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
     if err ~= 200 then 
         print("Please update the map, it has old code.")
     else
-        local mapDataFunction = load(text)
-        local mapData = {}
+        local mapData = load(text)
         if mapData then
             local mapTable = mapData()
             -- Extract static IDs and names from the new structure
