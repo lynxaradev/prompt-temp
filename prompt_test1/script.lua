@@ -25,8 +25,6 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
                 table.insert(allMaps, mapTable[i].static)
                 table.insert(mapNames, mapTable[i].name)
             end
-            print(json.encode(allMaps))
-            print(json.encode(mapNames))
 
             if Debug == true then 
                 print("Loaded ", #mapTable, " maps from all-data")
@@ -126,23 +124,21 @@ CreateThread(function()
     -- Example: name1+name2+name3 (using names instead of static IDs)
     local ids = ""
     for i = 1, #existList do
+        local mapName = ""
         local tempId = 1
         for j = 1, #allMaps do
-            if existList[i] == allMaps[j] then
+            if allMaps[j] == existList[i] then
                 tempId = j
                 break
             end
         end
 
-        ids = ids.. allMaps[tempId]
-
+        mapName = mapNames[tempId]
+        ids = ids..mapName
         if i ~= #existList then
-            ids = ids.. "+"
+            ids = ids.."+"
         end
     end
-    ids = string.sub(ids, 1, -2)
-
-    -- Making link for download lis
 
     local link = string.format(Urls.DownloadUrl, ids)
 
