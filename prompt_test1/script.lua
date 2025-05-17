@@ -20,6 +20,7 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
         local mapData = load(text)
         if mapData then
             local mapTable = mapData()
+            print(json.encode(mapTable))
             -- Extract static IDs and names from the new structure
             for resourceName, mapResource in pairs(mapTable) do
                 for _, mapInfo in pairs(mapResource) do
