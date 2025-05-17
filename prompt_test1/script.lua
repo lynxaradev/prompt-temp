@@ -19,9 +19,6 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
     else
         local mapDataFunction = load(text)
         local mapData = {}
-        if mapDataFunction ~= nil then 
-            mapData = mapDataFunction()
-        end
         if mapData then
             local mapTable = mapData()
             -- Extract static IDs and names from the new structure
