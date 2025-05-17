@@ -106,14 +106,50 @@ CreateThread(function()
     end
 
     -- Print legacy maps found message
-    if #legacyMaps > 0 then
-        print("+--------------------------------------------------------------------------+")
-        print("| ⚠️ ^3 Support for legacy script version found the following maps:^7            |")
-        for i = 1, #legacyMaps do
-            print("| ^3 - " .. legacyMaps[i] .. "^7" .. string.rep(" ", 70 - #legacyMaps[i]) .. "|")
+    -- Function to create a consistent box with dynamic width based on content
+    local function CreateBox(lines)
+        -- Find the longest line to determine box width
+        local maxLength = 0
+        for _, line in ipairs(lines) do
+            -- Strip color codes for length calculation
+            local stripped = line:gsub("\27%[[0-9]+m", ""):gsub("%^[0-9]", "")
+            maxLength = math.max(maxLength, #stripped)
         end
-        print("| ^3 Legacy maps will work, but consider downloading the new version^7          |")
-        print("+--------------------------------------------------------------------------+")
+        
+        -- Add padding for the box borders
+        local boxWidth = maxLength + 4  -- 2 spaces on each side
+        
+        -- Create the box
+        local result = {
+            "+" .. string.rep("-", boxWidth) .. "+"
+        }
+        
+        for _, line in ipairs(lines) do
+            -- Strip color codes for padding calculation
+            local stripped = line:gsub("\27%[[0-9]+m", ""):gsub("%^[0-9]", "")
+            local padding = boxWidth - #stripped
+            table.insert(result, "| " .. line .. string.rep(" ", padding - 2) .. " |")
+        end
+        
+        table.insert(result, "+" .. string.rep("-", boxWidth) .. "+")
+        return result
+    end
+
+    if #legacyMaps > 0 then
+        local boxLines = {
+            "⚠️ ^3 Support for legacy script version found the following maps:^7"
+        }
+        
+        for i = 1, #legacyMaps do
+            table.insert(boxLines, "^3 - " .. legacyMaps[i] .. "^7")
+        end
+        
+        table.insert(boxLines, "^3 Legacy maps will work, but consider downloading the new version^7")
+        
+        local box = CreateBox(boxLines)
+        for _, line in ipairs(box) do
+            print(line)
+        end
     else 
         if Debug == true then 
             print("Found no legacy maps, continuing...")
@@ -163,22 +199,37 @@ CreateThread(function()
         -- Printing result
         if same == false then 
             if #existList > #mapdataMaps then
-                print("+--------------------------------------------------------------------------+")
-                print("| ❌ ^8 Mapdata is not the same as maps installed^7                          |")
-                print("|^8 There are more maps than mapdata supports!^7                             |")
-                print("|^8", link, "^7")
-                print("+--------------------------------------------------------------------------+")
+                local boxLines = {
+                    "❌ ^8 Mapdata is not the same as maps installed^7",
+                    "^8 There are more maps than mapdata supports!^7",
+                    "^8" .. link .. "^7"
+                }
+                
+                local box = CreateBox(boxLines)
+                for _, line in ipairs(box) do
+                    print(line)
+                end
             elseif #existList < #mapdataMaps then
-                print("+--------------------------------------------------------------------------+")
-                print("| ❌ ^8 Mapdata is not the same as maps installed^7                          |")
-                print("|^8 There are less maps than mapdata supports!^7                             |")
-                print("|^8", link, "^7")
-                print("+--------------------------------------------------------------------------+")
+                local boxLines = {
+                    "❌ ^8 Mapdata is not the same as maps installed^7",
+                    "^8 There are less maps than mapdata supports!^7",
+                    "^8" .. link .. "^7"
+                }
+                
+                local box = CreateBox(boxLines)
+                for _, line in ipairs(box) do
+                    print(line)
+                end
             end
         else 
-            print("+--------------------------------------------------------------------------+")
-            print("| ✅ ^2Mapdata is the same as maps installed    ^7                             |")
-            print("+--------------------------------------------------------------------------+")
+            local boxLines = {
+                "✅ ^2Mapdata is the same as maps installed^7"
+            }
+            
+            local box = CreateBox(boxLines)
+            for _, line in ipairs(box) do
+                print(line)
+            end
         end
     end
 
@@ -220,21 +271,33 @@ CreateThread(function()
                 -- Update mapdataMaps with legacy data
                 mapdataMaps = legacyMapdataMaps
                 
-                print("+--------------------------------------------------------------------------+")
-                print("| ⚠️ ^3 Support for legacy mapdata found for the following maps:^7             |")
+                local boxLines = {
+                    "⚠️ ^3 Support for legacy mapdata found for the following maps:^7"
+                }
+                
                 for i = 1, #legacyMapdataMaps do
-                    print("| ^3 - " .. legacyMapdataMaps[i] .. "^7" .. string.rep(" ", 70 - #legacyMapdataMaps[i]) .. "|")
+                    table.insert(boxLines, "^3 - " .. legacyMapdataMaps[i] .. "^7")
                 end
-                print("| ^3 Legacy mapdata will work, but consider downloading the new version^7      |")
-                print("+--------------------------------------------------------------------------+")
+                
+                table.insert(boxLines, "^3 Legacy mapdata will work, but consider downloading the new version^7")
+                
+                local box = CreateBox(boxLines)
+                for _, line in ipairs(box) do
+                    print(line)
+                end
                 
                 -- Check if mapdata matches installed maps
                 checkMapdataMatch(mapdataMaps, existList, link)
             else
-                print("+--------------------------------------------------------------------------+")
-                print("| ❌ ^8 Mapdata does not exist ^7                                               |")
-                print("|^8", link, "^7")
-                print("+--------------------------------------------------------------------------+")
+                local boxLines = {
+                    "❌ ^8 Mapdata does not exist ^7",
+                    "^8" .. link .. "^7"
+                }
+                
+                local box = CreateBox(boxLines)
+                for _, line in ipairs(box) do
+                    print(line)
+                end
             end
         end
     end
