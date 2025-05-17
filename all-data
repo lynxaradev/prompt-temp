@@ -1,4 +1,4 @@
-{
+return {
 {
 name = "Church",
 static = "prompt_test1"
