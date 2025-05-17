@@ -1,3 +1,10 @@
+-- All maps list (Lua file with table structure)
+Urls.AllMapList = "https://raw.githubusercontent.com/LynxarA-Coding/prompt-temp/refs/heads/master/all-data"
+-- Direct url to mapdata on Github (%s will be replaced with map names in the format of name1+name2+name3)
+Urls.DownloadUrl = "https://github.com/Prompt-Coder/Sandy-Map-Data/tree/SandyMapData---%s"
+-- Direct url to mapdata to generate (%s will be replaced with map names in the format of name1+name2+name3)
+Urls.PlatformUrl = "https://vertex-hub.com/prompt/map-data/sandy-rework/%s"
+
 -- Getting maps in mapdata (send event)
 local returnEventName = "promptmap:return_" .. MapId
 CreateThread(function()
@@ -34,6 +41,40 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
         end
     end
 end, "GET")
+
+--[[
+    LEGACY MAP SUPPORT
+--]]
+
+local legacyEvents = {
+    exists = MapId .. ":mapExists",
+    fullName = MapId .. ":mapFullNameSend",
+    final = MapId.. ":mapFinal"
+}
+
+RegisterNetEvent(legacyEvents.exists, function(cb)
+    cb(true)
+end)
+
+RegisterNetEvent(legacyEvents.fullName, function(id)
+    local fullName = ""
+    for i = 1, #allMaps do
+        if allMaps[i] == id then
+            fullName = mapNames[i]
+            break
+        end
+    end
+
+    TriggerEvent(legacyEvents.fullName, fullName, id)
+end)
+
+RegisterNetEvent(legacyEvents.final, function()
+    -- nothing
+end)
+
+--[[
+    LEGACY MAP SUPPORT END
+--]]
 
 -- I exist event
 local iExistName = "promptmap:i_exist_".. MapId
@@ -183,7 +224,8 @@ CreateThread(function()
         if code == 200 then
             link = ("| 🔗 Download: %-56s |"):format(link)
         else
-            link = "| 🔗 Download link doesn't exist, please request the upload in support"
+            link = "| 🔗 Download link doesn't exist, please use our platform to generate mapdata:\n"
+            link = link .. string.format(Urls.PlatformUrl, ids)
         end
     end, "GET")
 
