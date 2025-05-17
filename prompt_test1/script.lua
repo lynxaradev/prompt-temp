@@ -12,13 +12,25 @@ end)
 
 -- Getting all maps possible
 local allMaps = {}
+local mapNames = {}
 PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
     if err ~= 200 then 
         print("Please update the map, it has old code.")
     else
-        local lines = text:gmatch("[^\r\n]+")
-        for line in lines do
-            table.insert(allMaps, line)
+        local mapData = load(text)
+        if mapData then
+            local mapTable = mapData()
+            -- Extract static IDs and names from the new structure
+            for resourceName, mapResource in pairs(mapTable) do
+                for _, mapInfo in pairs(mapResource) do
+                    if mapInfo.static and mapInfo.name then
+                        table.insert(allMaps, mapInfo.static)
+                        mapNames[mapInfo.static] = mapInfo.name
+                    end
+                end
+            end
+        else
+            print("Failed to load map data, it has an invalid format.")
         end
     end
 end, "GET")
@@ -109,10 +121,11 @@ CreateThread(function()
     end
 
     -- Making a link for Mapdata in case it does not fit
-    -- Example: prompt_test1+prompt_test2+prompt_test3
+    -- Example: name1+name2+name3 (using names instead of static IDs)
     local ids = ""
     for i = 1, #existList do
-        ids = ids..existList[i]
+        local mapName = mapNames[existList[i]] or existList[i] -- Use name if available, fallback to static ID
+        ids = ids..mapName
         if i ~= #existList then
             ids = ids.."+"
         end
