@@ -5,6 +5,6 @@ static = "prompt_test1"
 },
 {
 name = "trainstation",
-static = "prompt_trainstation"
+static = "prompt_test2"
 }
 }
