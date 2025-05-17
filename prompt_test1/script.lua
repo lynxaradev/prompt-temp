@@ -20,15 +20,14 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
         local mapData = load(text)
         if mapData then
             local mapTable = mapData()
-            print(json.encode(mapTable))
-            -- Extract static IDs and names from the new structure
-            for resourceName, mapResource in pairs(mapTable) do
-                for _, mapInfo in pairs(mapResource) do
-                    if mapInfo.static and mapInfo.name then
-                        table.insert(allMaps, mapInfo.static)
-                        mapNames[mapInfo.static] = mapInfo.name
-                    end
-                end
+
+            for i = 1, #mapTable do 
+                table.insert(allMaps, mapTable[i].static)
+                table.insert(mapNames, mapTable[i].name)
+            end
+
+            if Debug == true then 
+                print("Loaded ", #mapTable, " maps from all-data")
             end
         else
             print("Failed to load map data, it has an invalid format.")
