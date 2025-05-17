@@ -18,6 +18,10 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
         print("Please update the map, it has old code.")
     else
         local mapData = load(text)
+        if Debug == true then
+            print("Type of mapData: ".. type(mapData))
+            print("Content of mapData: ".. tostring(mapData))
+        end
         if mapData then
             local mapTable = mapData()
             -- Extract static IDs and names from the new structure
