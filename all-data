@@ -1,10 +1,10 @@
 return {
 {
-name = "Church",
+name = "Sheriff",
 static = "prompt_test1"
 },
 {
-name = "Sheriff",
-static = "prompt_test2"
+name = "Church",
+static = "Church"
 }
 }
