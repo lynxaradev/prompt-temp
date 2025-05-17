@@ -17,10 +17,10 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
     if err ~= 200 then 
         print("Please update the map, it has old code.")
     else
-        local mapData = load(text)
-        if Debug == true then
-            print("Type of mapData: ".. type(mapData))
-            print("Content of mapData: ".. tostring(mapData))
+        local mapDataFunction = load(text)
+        local mapData = {}
+        if mapDataFunction ~= nil then 
+            mapData = mapDataFunction()
         end
         if mapData then
             local mapTable = mapData()
