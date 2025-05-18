@@ -4,6 +4,10 @@ name = "Sheriff",
 static = "prompt_test1"
 },
 {
+name = "Aboba",
+static = "prompt_test2"
+},
+{
 name = "sheriff",
 static = "prompt_sandy_sheriff"
 }
