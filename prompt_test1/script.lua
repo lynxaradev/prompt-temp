@@ -245,8 +245,8 @@ CreateThread(function()
         end
     end
 
-    print(existList[#existList])
-    print(json.encode(existList))
+    print(existList[#existList] == MapId)
+    print(json.encode(mapdataMaps))
     -- Checking if this map is last 
     if existList[#existList] == MapId then
         -- Checking if mapdata exists
