@@ -202,9 +202,29 @@ CreateThread(function()
     -- Function to check if mapdata matches installed maps and print results
     local function checkMapdataMatch(mapdataMaps, existList, link)
         local same = true
+        -- sort copy of both tables
+        local tempMapdataMaps = {}
+        local tempExistList = {}
+
         for i = 1, #mapdataMaps do
-            if existList[i] == nil or existList[i] ~= mapdataMaps[i] then
+            table.insert(tempMapdataMaps, mapdataMaps[i])
+        end
+
+        for i = 1, #existList do
+            table.insert(tempExistList, existList[i])
+        end
+
+        table.sort(tempMapdataMaps)
+        table.sort(tempExistList)
+
+        if #tempMapdataMaps ~= #tempExistList then
+            same = false
+        end
+
+        for i = 1, #tempMapdataMaps do
+            if tempMapdataMaps[i] ~= tempExistList[i] then
                 same = false
+                break
             end
         end
         
@@ -245,8 +265,6 @@ CreateThread(function()
         end
     end
 
-    print(existList[#existList] == MapId)
-    print(json.encode(mapdataMaps))
     -- Checking if this map is last 
     if existList[#existList] == MapId then
         -- Checking if mapdata exists
