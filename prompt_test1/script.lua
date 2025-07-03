@@ -1,7 +1,7 @@
 -- All maps list (Lua file with table structure)
 Urls.AllMapList = "https://raw.githubusercontent.com/Prompt-Coder/mapdatachecker/refs/heads/main/all_data_full"
 -- Direct url to mapdata on Github (%s will be replaced with map names in the format of name1+name2+name3)
-Urls.DownloadUrl = "https://github.com/Prompt-Coder/Sandy-Map-Data/tree/SandyMapData---%s"
+Urls.DownloadUrl = "https://github.com/Prompt-Coder/Sandy-Map-Data/tree/SandyMapData----%s"
 -- Direct url to mapdata to generate (%s will be replaced with map names in the format of name1+name2+name3)
 Urls.PlatformUrl = "https://vertex-hub.com/prompt/map-data/sandy-rework/%s"
 
