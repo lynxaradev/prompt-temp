@@ -188,14 +188,16 @@ CreateThread(function()
     end
 
     local link = string.format(Urls.DownloadUrl, ids)
-
+        
     -- Checking if link exists
     PerformHttpRequest(link, function(code, text, headers)
         if code == 200 then
-            link = ("| 🔗 Download: %-56s |"):format(link)
+            print("old link")
+            local finalUrl = link .. ".zip"
+            link = ("| 🔗 Download: %-56s |"):format(finalUrl)
         else
-            link = "| 🔗 Download link doesn't exist, please use our platform to generate mapdata:\n"
-            link = link .. string.format(Urls.PlatformUrl, ids) .. ".zip"
+            print("new link")
+            link = string.format(Urls.PlatformUrl, ids)
         end
     end, "GET")
 
