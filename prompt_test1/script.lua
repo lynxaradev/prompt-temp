@@ -192,12 +192,13 @@ CreateThread(function()
 
     -- Checking if link exists
     PerformHttpRequest(link, function(code, text, headers)
+        local finalUrl = ""
         if code == 200 then
-            local finalUrl = link .. ".zip"
-            link = ("| 🔗 Download: %-56s |"):format(finalUrl)
+            finalUrl = link .. ".zip"
         else
-            link = string.format(Urls.PlatformUrl, ids)
+            finalUrl = string.format(Urls.PlatformUrl, ids)
         end
+        link = ("| 🔗 Download: %-56s |"):format(finalUrl)
 
         returned = true
     end, "GET")
