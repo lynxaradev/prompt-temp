@@ -244,6 +244,8 @@ CreateThread(function()
                     "^8 There are more maps than mapdata supports!^7",
                     "^8" .. link .. "^7"
                 }
+
+                print(json.encode(mapdataMaps), json.encode(existList))
                 
                 local box = CreateBox(boxLines)
                 for _, line in ipairs(box) do
