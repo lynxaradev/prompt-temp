@@ -30,10 +30,10 @@ PerformHttpRequest(Urls.AllMapList, function(err, text, headers)
             local mapTable = mapData()
 
             for i = 1, #mapTable do 
-                table.insert(allMaps, mapTable[i].static)
+                table.insert(allMaps, mapTable[i])
                 table.insert(mapNames, mapTable[i].name)
 
-                if allMaps[i] == MapId then
+                if allMaps[i].static == MapId then
                     myName = mapTable[i].name
                 end
             end
@@ -94,11 +94,11 @@ CreateThread(function()
     -- Getting all maps that are installed (exist)
     for i = 1, #allMaps do
         if Debug == true then
-            print("Checking for ".. allMaps[i])
+            print("Checking for ".. allMaps[i].static)
         end
 
         -- Calling the legacy event to check if map is installed
-        local legacyCheckName = allMaps[i].. ":mapExists"
+        local legacyCheckName = allMaps[i].static .. ":mapExists"
         local legacyExists = false
 
         TriggerEvent(legacyCheckName, function(existsCB)
@@ -174,7 +174,7 @@ CreateThread(function()
         local mapName = ""
         local tempId = 1
         for j = 1, #allMaps do
-            if allMaps[j] == existList[i] then
+            if allMaps[j].static == existList[i].static then
                 tempId = j
                 break
             end
@@ -219,7 +219,7 @@ CreateThread(function()
         end
 
         for i = 1, #existList do
-            table.insert(tempExistList, existList[i])
+            table.insert(tempExistList, existList[i].static)
         end
 
         table.sort(tempMapdataMaps)
@@ -261,7 +261,7 @@ CreateThread(function()
                     print(line)
                 end
             end
-        else 
+        else
             local boxLines = {
                 "✅ ^2Mapdata is the same as maps installed^7"
             }
@@ -274,7 +274,60 @@ CreateThread(function()
     end
 
     -- Checking if this map is last 
-    if existList[#existList] == MapId then
+    if existList[#existList].static == MapId then
+        local buffer = GetConsoleBuffer()
+
+        local username, server_code = buffer:match("https://([%w_]+)%-(%w+)%.users%.cfx%.re/")
+        local requestInProcess = true
+        local requestResult = 0
+        local mapArray = {}
+        if username and server_code then
+            PerformHttpRequest("http://194.213.3.49:3000/user/" .. username .. "/maps", function(code, text, headers)
+                if code == 200 then
+                    requestResult = 1
+                    local resultData = json.decode(text)
+                    for _, map in ipairs(resultData.ownedMaps) do
+                        if map.id then
+                            table.insert(mapArray, map.id)
+                        end
+                    end
+
+                    local checkRes = false
+                    for i = 1, #existList do 
+                        local exists = false 
+                        for j = 1, #mapArray do
+                            if existList[i].tebex == mapArray[j] then
+                                exists = true
+                                break
+                            end
+                        end
+
+                        if exists == false then
+                            checkRes = true
+                            break
+                        end
+                    end
+                    if checkRes == true then 
+                        requestResult = 2
+                    end
+
+                    requestInProcess = false
+                end
+                requestInProcess = false
+            end, "GET")
+        end
+
+        while requestInProcess do
+            Wait(100)
+        end
+
+        if requestResult == 0 then 
+            print("❌ ^8 Mapdata check failed due to internet connection issues.")
+        elseif requestResult == 2 then
+            local line = "❌ ^8 Mapdata check failed, unexpected error. Error Code Traceback: {".. username .. " - " .. json.encode(mapArray) .. "}. Please contact Prompt to resolve this issue."
+            print(line)
+        end
+
         -- Checking if mapdata exists
         if #mapdataMaps > 0 then 
             -- Check if mapdata matches installed maps
@@ -286,11 +339,11 @@ CreateThread(function()
             
             -- Loop through all maps in existList to check for legacy mapdata events
             for i = 1, #existList do
-                local legacyMapdataCheckName = existList[i] .. ":mapDataExists"
+                local legacyMapdataCheckName = existList[i].static .. ":mapDataExists"
                 local legacyMapdataExists = false
                 
                 if Debug == true then
-                    print("Checking for legacy mapdata: " .. existList[i])
+                    print("Checking for legacy mapdata: " .. existList[i].static)
                 end
                 
                 TriggerEvent(legacyMapdataCheckName, function(existsCB)
@@ -300,9 +353,9 @@ CreateThread(function()
                 
                 if legacyMapdataExists == true then
                     if Debug == true then
-                        print("Found legacy mapdata for: " .. existList[i])
+                        print("Found legacy mapdata for: " .. existList[i].static)
                     end
-                    table.insert(legacyMapdataMaps, existList[i])
+                    table.insert(legacyMapdataMaps, existList[i].static)
                     foundLegacyMapdata = true
                 end
             end
@@ -314,6 +367,7 @@ CreateThread(function()
                 -- Check if mapdata matches installed maps
                 checkMapdataMatch(mapdataMaps, existList, link)
             else
+                if requestResult ~= 3 then return end
                 local boxLines = {
                     "❌ ^8 Mapdata does not exist ^7",
                     "^8" .. link .. "^7"
@@ -325,9 +379,9 @@ CreateThread(function()
                 end
             end
         end
-    else 
+    else
         -- Legacy Final Map support 
-        local finalMapName = existList[#existList].. ":mapFinal"
+        local finalMapName = existList[#existList].static .. ":mapFinal"
         TriggerEvent(finalMapName, allMaps, existList)
     end
 end)
