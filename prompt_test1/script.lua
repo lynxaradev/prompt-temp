@@ -244,8 +244,6 @@ CreateThread(function()
                     "^8 There are more maps than mapdata supports!^7",
                     "^8" .. link .. "^7"
                 }
-
-                print(json.encode(mapdataMaps), json.encode(existList))
                 
                 local box = CreateBox(boxLines)
                 for _, line in ipairs(box) do
@@ -322,20 +320,21 @@ CreateThread(function()
         while requestInProcess == true do
             Wait(100)
         end
-        print(requestResult, username, json.encode(mapArray), "\n\n", json.encode(existList))
 
         if requestResult == 0 then 
             print("❌ ^8 Mapdata check failed due to internet connection issues.")
+            return
         elseif requestResult == 2 then
             local line = "❌ ^8 Mapdata check failed, unexpected error. Error Code Traceback: {".. username .. " - " .. json.encode(mapArray) .. "}. Please contact Prompt to resolve this issue."
             print(line)
+            return
         end
 
         -- Checking if mapdata exists
-        if #mapdataMaps > 0 then 
+        if #mapdataMaps > 0 and requestResult == 1 then 
             -- Check if mapdata matches installed maps
             checkMapdataMatch(mapdataMaps, existList, link)
-        else 
+        elseif requestResult == 1 then 
             -- Check for legacy mapdata events
             local legacyMapdataMaps = {}
             local foundLegacyMapdata = false
