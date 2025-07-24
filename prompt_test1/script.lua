@@ -319,9 +319,10 @@ CreateThread(function()
             end, "GET")
         end
 
-        while requestInProcess do
+        while requestInProcess == true do
             Wait(100)
         end
+        print(requestResult, username, json.encode(mapArray), "\n\n", json.encode(existList))
 
         if requestResult == 0 then 
             print("❌ ^8 Mapdata check failed due to internet connection issues.")
