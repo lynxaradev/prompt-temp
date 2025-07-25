@@ -351,7 +351,7 @@ CreateThread(function()
             end
             return
         end
-
+        print("requestResult = ", requestResult)
         -- Checking if mapdata exists
         if #mapdataMaps > 0 then 
             -- Check if mapdata matches installed maps
