@@ -357,6 +357,7 @@ CreateThread(function()
             -- Check if mapdata matches installed maps
             checkMapdataMatch(mapdataMaps, existList, link)
         else
+            print("It went further")
             -- Check for legacy mapdata events
             local legacyMapdataMaps = {}
             local foundLegacyMapdata = false
