@@ -1,7 +1,7 @@
 -- All maps list (Lua file with table structure)
 Urls.AllMapList = "https://raw.githubusercontent.com/Prompt-Coder/mapdatachecker/refs/heads/main/all_data_full"
 -- Direct url to mapdata on Github (%s will be replaced with map names in the format of name1+name2+name3)
-Urls.DownloadUrl = "https://github.com/Prompt-Coder/Sandy-Map-Data/tree/SandyMapData----%s"
+Urls.DownloadUrl = "https://github.com/Prompt-Coder/Sandy-Map-Data/archive/refs/heads/SandyMapData----%s"
 -- Direct url to mapdata to generate (%s will be replaced with map names in the format of name1+name2+name3)
 Urls.PlatformUrl = "https://vertex-hub.com/prompt/map-data/sandy-rework/%s"
 
@@ -286,31 +286,35 @@ CreateThread(function()
                 if code == 200 then
                     requestResult = 1
                     local resultData = json.decode(text)
-                    for _, map in ipairs(resultData.ownedMaps) do
-                        if map.id then
-                            table.insert(mapArray, map.id)
-                        end
-                    end
 
-                    local checkRes = false
-                    for i = 1, #existList do 
-                        local exists = false 
-                        for j = 1, #mapArray do
-                            if existList[i].tebex == mapArray[j] then
-                                exists = true
-                                break
+                    if resultData.bstatus == true then 
+                        requestResult = 3
+                    else 
+                        for _, map in ipairs(resultData.ownedMaps) do
+                            if map.id then
+                                table.insert(mapArray, map.id)
                             end
                         end
 
-                        if exists == false then
-                            checkRes = true
-                            break
+                        local checkRes = false
+                        for i = 1, #existList do 
+                            local exists = false 
+                            for j = 1, #mapArray do
+                                if existList[i].tebex == mapArray[j] then
+                                    exists = true
+                                    break
+                                end
+                            end
+
+                            if exists == false then
+                                checkRes = true
+                                break
+                            end
+                        end
+                        if checkRes == true then 
+                            requestResult = 2
                         end
                     end
-                    if checkRes == true then 
-                        requestResult = 2
-                    end
-
                     requestInProcess = false
                 end
                 requestInProcess = false
@@ -325,16 +329,34 @@ CreateThread(function()
             print("❌ ^8 Mapdata check failed due to internet connection issues.")
             return
         elseif requestResult == 2 then
-            local line = "❌ ^8 Mapdata check failed, unexpected error. Error Code Traceback: {".. username .. " - " .. json.encode(mapArray) .. "}. Please contact Prompt to resolve this issue."
-            print(line)
+            local lines = {}
+            table.insert(lines, "❌ ^8 Ownership Check Failed^7")
+            table.insert(lines, "^8 In case someone transfered ownership to you, ...^7")
+            table.insert(lines, "^8 ...fill in this form and wait for an answer: url^7")
+            local box = CreateBox(lines)
+            for _, line in ipairs(box) do
+                print(line)
+            end
+            return 
+        elseif requestResult == 3 then
+            local lines = {}
+            table.insert(lines, "❌ ^8 Ownership Check Failed^7")
+            table.insert(lines, "^8 In case someone transfered ownership to you^7")
+            table.insert(lines, "^8 open a ticket and share this traceback:^7")
+            local line = "^8" .. username .. " - ".. json.encode(mapArray) .. "^7"
+            table.insert(lines, line)
+            local box = CreateBox(lines)
+            for _, line in ipairs(box) do
+                print(line)
+            end
             return
         end
 
         -- Checking if mapdata exists
-        if #mapdataMaps > 0 and requestResult == 1 then 
+        if #mapdataMaps > 0 then 
             -- Check if mapdata matches installed maps
             checkMapdataMatch(mapdataMaps, existList, link)
-        elseif requestResult == 1 then 
+        else
             -- Check for legacy mapdata events
             local legacyMapdataMaps = {}
             local foundLegacyMapdata = false
