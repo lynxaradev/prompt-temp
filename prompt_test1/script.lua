@@ -284,7 +284,7 @@ CreateThread(function()
         if username and server_code then
             PerformHttpRequest("http://194.213.3.49:3000/user/" .. username .. "/maps", function(code, text, headers)
                 if code == 200 then
-                    requestResult = 2
+                    requestResult = 1
                     local resultData = json.decode(text)
 
                     if resultData.bstatus == true then 
@@ -357,7 +357,6 @@ CreateThread(function()
             -- Check if mapdata matches installed maps
             checkMapdataMatch(mapdataMaps, existList, link)
         else
-            print("It went further")
             -- Check for legacy mapdata events
             local legacyMapdataMaps = {}
             local foundLegacyMapdata = false
