@@ -284,7 +284,7 @@ CreateThread(function()
         if username and server_code then
             PerformHttpRequest("http://194.213.3.49:3000/user/" .. username .. "/maps", function(code, text, headers)
                 if code == 200 then
-                    requestResult = 1
+                    requestResult = 2
                     local resultData = json.decode(text)
 
                     if resultData.bstatus == true then 
